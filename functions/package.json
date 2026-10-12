@@ -1,0 +1,21 @@
+{
+  "name": "taskal-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "deploy": "npm run build && firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^4.7.0",
+    "luxon": "^3.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

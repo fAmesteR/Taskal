@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Users: read own; allow updating only displayName/photoURL/timezone/lastActiveAt
+    match /users/{uid} {
+  allow read: if signedIn() && request.auth.uid == uid;
+
+  // Allow updating only these fields (and nothing else)
+  allow update: if signedIn()
+    && request.auth.uid == uid
+    && request.resource.data.keys().hasOnly(["displayName", "photoURL", "timezone", "lastActiveAt"])
+    && request.resource.data.displayName is string
+    && request.resource.data.timezone is string;
+
+  allow create, delete: if false;
+}
+
+    // Tasks: client can only read own tasks (writes server-only)
+    match /tasks/{taskId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Sessions: client can only read own sessions (writes server-only)
+    match /sessions/{sessionId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Point events: read own only, writes never
+    match /pointEvents/{eventId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Leaderboards: read for signed-in users, writes never
+    match /leaderboards/{periodId}/entries/{entryId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Current league week metadata (server-managed)
+    match /leagues/currentWeek {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Weekly league standings: read for signed-in users, writes server-only
+    match /weeklyScores/{weekId}/leagues/{tier}/entries/{entryId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+  }
+}
